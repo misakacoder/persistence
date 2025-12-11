@@ -1,6 +1,7 @@
 package persistence
 
 import (
+	"bytes"
 	"encoding/gob"
 	"encoding/json"
 	"io"
@@ -16,12 +17,15 @@ type JSON string
 
 func (receiver JSON) Encode(v any) {
 	encode(string(receiver), func(f *os.File) {
-		bytes, err := json.MarshalIndent(v, "", "  ")
-		if err != nil {
+		var buffer bytes.Buffer
+		encoder := json.NewEncoder(&buffer)
+		encoder.SetEscapeHTML(false)
+		encoder.SetIndent("", "  ")
+		if err := encoder.Encode(v); err != nil {
 			panic(err)
 		}
 		f.Truncate(0)
-		f.Write(bytes)
+		f.Write(buffer.Bytes())
 	})
 }
 
